@@ -10,7 +10,6 @@ func main() {
 }
 
 var (
-	session    bool
 	usertype   string
 	userErrors int = 0
 	filename   string
@@ -26,13 +25,15 @@ func InitSystem() {
 	case 2:
 		AdminSession()
 	case 3:
-		ExitSession()
+		CloseSession()
 	}
 }
 
 func AdminSession() {
+	/*Admin Credentials Hardcoded*/
 	var admin string = "admin"
 	var adminPass string = "admin"
+
 	fmt.Println("Ingresa tu nombre de usuario")
 	var inputUser string
 	fmt.Scan(&inputUser)
@@ -55,8 +56,10 @@ func AdminSession() {
 }
 
 func UserSession() {
+	/* user credentials harcoded*/
 	var user string = "user"
 	var userPass string = "user"
+
 	fmt.Println("Ingresa tu nombre de usuario")
 	var inputUser string
 	fmt.Scan(&inputUser)
@@ -85,6 +88,7 @@ func Adminfunctions() {
 	fmt.Println("3 Escribir en Doc")
 	fmt.Println("4 Borrar Doc")
 	fmt.Println("5 Cambiar Sesion de usuario")
+	fmt.Println("6 Finalizar Sesion y salir")
 	var adminSelection int
 	fmt.Scan(&adminSelection)
 	switch adminSelection {
@@ -98,16 +102,26 @@ func Adminfunctions() {
 		DeleteFile()
 	case 5:
 		InitSystem()
+	case 6:
+		CloseSession()
 	}
 }
 
 func Userfunctions() {
 	fmt.Println("\n User menu \n")
+	fmt.Println(" 1- leer archivo \n 2- cambiar sesion\n 3 cerrar sesion")
+	var userActionSelect int
+	fmt.Scan(&userActionSelect)
 
-}
+	switch userActionSelect {
+	case 1:
+		ReadFile()
+	case 2:
+		InitSystem()
+	case 3:
+		CloseSession()
+	}
 
-func ReadFile() {
-	fmt.Println("Leyendo archivo")
 }
 
 func CreateFile() {
@@ -131,6 +145,9 @@ func CreateFile() {
 func WriteFile() {
 	fmt.Println("<<< Ingresa Nombre del Archivo donde vas a escribir >>>")
 	fmt.Scan(&filename)
+
+	/* validating lenght name*/
+
 	if len(filename) > 1 {
 
 		var file, err = os.OpenFile(filename+".txt", os.O_RDWR, 000)
@@ -157,12 +174,25 @@ func WriteFile() {
 		}
 
 		fmt.Println("actualizado con exito")
+		Adminfunctions()
 	}
 
 }
 
 func DeleteFile() {
-	fmt.Println("Eliminando Archivo")
+	fmt.Println("Ingrese el nombre del archivo que desea eliminar")
+	var userFileToDelete string
+	fmt.Scan(&userFileToDelete)
+	err := os.Remove(userFileToDelete + ".txt")
+
+	if err != nil {
+		fmt.Println("Error:", err)
+		Adminfunctions()
+	} else {
+		fmt.Println("archivo borrado", userFileToDelete+".txt\n")
+		Adminfunctions()
+	}
+
 }
 
 func FileErrorFound(err error) bool {
@@ -172,9 +202,36 @@ func FileErrorFound(err error) bool {
 	return (err != nil)
 }
 
-func HandlingErrorsSessions() {
-	userErrors++
+func ReadFile() {
+	fmt.Println("Ingresa nombre del archivo a leer")
+	/* taking user input*/
+	var toReadFile string
+	fmt.Scan(&toReadFile)
 
+	/* handling file to read in console*/
+	file, err := os.ReadFile(toReadFile + ".txt")
+	if err != nil {
+		fmt.Println("Error: ", err)
+		UserTypeValidation()
+	} else {
+		os.Stdout.Write(file)
+		UserTypeValidation()
+	}
+}
+
+func UserTypeValidation() {
+	/* check usertype from global variable */
+	if usertype == "admin" {
+		Adminfunctions()
+	} else {
+		Userfunctions()
+	}
+}
+
+func HandlingErrorsSessions() {
+	/* register of users attemps to login */
+	userErrors++
+	/* Handling errors logins limits  */
 	if userErrors >= 2 {
 		fmt.Println("\n muchos intentos fallidos redirigiendo al menu principal... \n ")
 		userErrors = 0
@@ -182,8 +239,10 @@ func HandlingErrorsSessions() {
 	}
 }
 
-func ExitSession() int {
+func CloseSession() int {
+	/* reset variables to finish session */
 	usertype = ""
+	filename = ""
 	fmt.Println("\n Cerrando Sesion \n")
 	return 0
 }
